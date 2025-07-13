@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Liste des Membres - CBCA Vulumbi{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-cbca text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-users me-2"></i>Liste des Membres</h4>
+            <a href="{{ url_for('ajouter_membre') }}" class="btn btn-light btn-sm">
+                <i class="fas fa-plus me-1"></i>Ajouter
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nom</th>
+                        <th>Téléphone</th>
+                        <th>API_KEY</th>
+                        <th>Adresse</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for membre in membres %}
+                    <tr>
+                        <td>{{ membre.nom }}</td>
+                        <td>{{ membre.telephone }}</td>
+                        <td>{{ membre.apikey_callmebot }}</td>
+                        <td>{{ membre.adresse or '-' }}</td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalDetail{{ membre.id }}">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="#" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalEdit{{ membre.id }}">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <!-- Modal Détail -->
+                    <div class="modal fade" id="modalDetail{{ membre.id }}" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                          <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title"><i class="fas fa-user me-2"></i>Détails de {{ membre.nom }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                          </div>
+                          <div class="modal-body">
+                            <p><strong>Nom:</strong> {{ membre.nom }}</p>
+                            <p><strong>Téléphone:</strong> {{ membre.telephone }}</p>
+                            <p><strong>API Key:</strong> {{ membre.apikey_callmebot or '—' }}</p>
+                            <p><strong>Adresse:</strong> {{ membre.adresse or '—' }}</p>
+                            <p><strong>Sexe:</strong> {{ 'Masculin' if membre.sexe == 'M' else 'Féminin' }}</p>
+                            <p><strong>Groupe:</strong> {{ membre.groupe }}</p>
+                            <p><strong>Statut:</strong> {{ membre.statut }}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Modal Modification -->
+                    <div class="modal fade" id="modalEdit{{ membre.id }}" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                          <form method="POST" action="{{ url_for('modifier_membre', id=membre.id) }}" enctype="multipart/form-data">
+                            <div class="modal-header bg-secondary text-white">
+                              <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Modifier {{ membre.nom }}</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                              <div class="mb-3">
+                                <label>Nom</label>
+                                <input type="text" name="nom" class="form-control" value="{{ membre.nom }}" required>
+                              </div>
+                              <div class="mb-3">
+                                <label>Téléphone</label>
+                                <input type="text" name="telephone" class="form-control" value="{{ membre.telephone }}" required>
+                              </div>
+                              <div class="mb-3">
+                                <label>Adresse</label>
+                                <input type="text" name="adresse" class="form-control" value="{{ membre.adresse }}">
+                              </div>
+                              <div class="mb-3">
+                                <label>Date de naissance</label>
+                                <input type="date" name="date_naissance" class="form-control" value="{{ membre.date_naissance }}">
+                              </div>
+                              <div class="mb-3">
+                                <label>Sexe</label>
+                                <select name="sexe" class="form-select" required>
+                                  <option value="M" {% if membre.sexe == 'M' %}selected{% endif %}>Masculin</option>
+                                  <option value="F" {% if membre.sexe == 'F' %}selected{% endif %}>Féminin</option>
+                                </select>
+                              </div>
+                              <div class="mb-3">
+                                <label>Groupe</label>
+                                <select name="groupe" class="form-select">
+                                  {% for g in ['Chorale', 'Jeunesse', 'Dames', 'Hommes', 'Enfants'] %}
+                                    <option value="{{ g }}" {% if membre.groupe == g %}selected{% endif %}>{{ g }}</option>
+                                  {% endfor %}
+                                </select>
+                              </div>
+                              <div class="mb-3">
+                                <label>Photo</label>
+                                <input type="file" name="photo" class="form-control">
+                              </div>
+                              <div class="mb-3">
+                                <label>API Key CallMeBot</label>
+                                <input type="text" name="api" class="form-control" value="{{ membre.apikey_callmebot }}">
+                              </div>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="submit" class="btn btn-success">Enregistrer</button>
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

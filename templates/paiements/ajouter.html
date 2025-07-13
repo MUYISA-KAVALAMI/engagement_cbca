@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Ajouter un Paiement - CBCA Vulumbi{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-cbca text-white">
+                    <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Ajouter un Paiement</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="engagement_id" class="form-label">Engagement concerné</label>
+                            <select id="engagement_id" name="engagement_id" class="form-select" required>
+                                <option value="">-- Sélectionnez un engagement --</option>
+                                {% for e in engagements %}
+                                <option value="{{ e.id }}">
+                                    {{ e.membre.nom }} – {{ "%.2f"|format(e.montant_total) }}$ (Limite {{ e.date_limite.strftime('%d/%m/%Y') }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="montant" class="form-label">Montant payé</label>
+                            <input type="number" id="montant" name="montant" class="form-control" required step="0.01" min="0">
+                        </div>
+                        <div class="mb-3">
+                            <label for="date_paiement" class="form-label">Date du paiement</label>
+                            <input type="date" id="date_paiement" name="date_paiement" class="form-control" value="{{ date.today() }}">
+                        </div>
+                        <div class="text-end mt-4">
+                            <a href="{{ url_for('liste_paiements') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Retour
+                            </a>
+                            <button type="submit" class="btn btn-cbca">
+                                <i class="fas fa-save me-1"></i>Enregistrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle me-2"></i>
+                Seuls les paiements liés à un engagement sont autorisés.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
