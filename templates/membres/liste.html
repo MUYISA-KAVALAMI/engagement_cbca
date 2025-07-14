@@ -2,127 +2,434 @@
 
 {% block title %}Liste des Membres - CBCA Vulumbi{% endblock %}
 
+{% block css %}
+<style>
+    .member-card {
+        transition: all 0.3s ease;
+        border-radius: 10px;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .member-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(227, 6, 19, 0.1);
+    }
+    
+    .member-photo {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .status-badge {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid white;
+    }
+    
+    .status-active {
+        background-color: #28a745;
+    }
+    
+    .status-inactive {
+        background-color: #dc3545;
+    }
+    
+    .api-key {
+        font-family: monospace;
+        font-size: 0.85rem;
+        background-color: #f8f9fa;
+        padding: 2px 5px;
+        border-radius: 3px;
+        word-break: break-all;
+    }
+    
+    .search-box {
+        position: relative;
+        max-width: 300px;
+    }
+    
+    .search-box .form-control {
+        padding-left: 40px;
+    }
+    
+    .search-box i {
+        position: absolute;
+        left: 15px;
+        top: 12px;
+        color: #6c757d;
+    }
+    
+    .action-btn {
+        width: 35px;
+        height: 35px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    
+    .detail-badge {
+        font-size: 0.8rem;
+        padding: 5px 8px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+    
+    @media (max-width: 768px) {
+        .table-responsive {
+            border: none;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="card shadow-sm border-0">
-    <div class="card-header bg-cbca text-white">
-        <div class="d-flex justify-content-between align-items-center">
-            <h4 class="mb-0"><i class="fas fa-users me-2"></i>Liste des Membres</h4>
-            <a href="{{ url_for('ajouter_membre') }}" class="btn btn-light btn-sm">
-                <i class="fas fa-plus me-1"></i>Ajouter
-            </a>
+    <div class="card-header bg-cbca text-danger">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <h4 class="mb-3 mb-md-0">
+                <i class="fas fa-users me-2"></i>Liste des Membres
+                <span class="badge bg-light text-dark ms-2">{{ membres|length }}</span>
+            </h4>
+            <div class="d-flex flex-column flex-md-row gap-2">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Rechercher...">
+                </div>
+                <a href="{{ url_for('ajouter_membre') }}" class="btn btn-light btn-sm">
+                    <i class="fas fa-plus me-1"></i>Ajouter
+                </a>
+            </div>
         </div>
     </div>
+    
     <div class="card-body">
+        {% if membres %}
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover align-middle" id="membersTable">
                 <thead class="table-light">
                     <tr>
-                        <th>Nom</th>
-                        <th>Téléphone</th>
-                        <th>API_KEY</th>
-                        <th>Adresse</th>
-                        <th>Actions</th>
+                        <th>Membre</th>
+                        <th>Coordonnées</th>
+                        <th>Groupe</th>
+                        <th>Statut</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for membre in membres %}
-                    <tr>
-                        <td>{{ membre.nom }}</td>
-                        <td>{{ membre.telephone }}</td>
-                        <td>{{ membre.apikey_callmebot }}</td>
-                        <td>{{ membre.adresse or '-' }}</td>
+                    <tr class="member-card">
                         <td>
-                            <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalDetail{{ membre.id }}">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="#" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalEdit{{ membre.id }}">
-                                <i class="fas fa-edit"></i>
-                            </a>
+                            <div class="d-flex align-items-center">
+                                <div class="position-relative me-3">
+                                    {% if membre.photo %}
+                                    <img src="{{ url_for('static', filename='uploads/' + membre.photo) }}" 
+                                         class="member-photo" alt="{{ membre.nom }}">
+                                    {% else %}
+                                    <div class="member-photo bg-secondary text-white d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    {% endif %}
+                                    <span class="status-badge {% if membre.statut == 'actif' %}status-active{% else %}status-inactive{% endif %}"></span>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ membre.nom }}</h6>
+                                    <small class="text-muted">{{ membre.code_membre }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <div><i class="fas fa-phone-alt me-2 text-muted"></i> {{ membre.telephone }}</div>
+                                {% if membre.adresse %}
+                                <div class="text-truncate" style="max-width: 200px;">
+                                    <i class="fas fa-map-marker-alt me-2 text-muted"></i> {{ membre.adresse }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-info text-dark">{{ membre.groupe or '—' }}</span>
+                        </td>
+                        <td>
+                            <span class="badge {% if membre.statut == 'actif' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ membre.statut|capitalize }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="#" class="action-btn btn btn-outline-primary" 
+                                   data-bs-toggle="modal" data-bs-target="#modalDetail{{ membre.id }}"
+                                   title="Voir détails">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="#" class="action-btn btn btn-outline-secondary" 
+                                   data-bs-toggle="modal" data-bs-target="#modalEdit{{ membre.id }}"
+                                   title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('detail_membre', id=membre.id) }}" 
+                                   class="action-btn btn btn-outline-info"
+                                   title="Profil complet">
+                                    <i class="fas fa-user-circle"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     
                     <!-- Modal Détail -->
                     <div class="modal fade" id="modalDetail{{ membre.id }}" tabindex="-1" aria-hidden="true">
-                      <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                          <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title"><i class="fas fa-user me-2"></i>Détails de {{ membre.nom }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                          </div>
-                          <div class="modal-body">
-                            <p><strong>Nom:</strong> {{ membre.nom }}</p>
-                            <p><strong>Téléphone:</strong> {{ membre.telephone }}</p>
-                            <p><strong>API Key:</strong> {{ membre.apikey_callmebot or '—' }}</p>
-                            <p><strong>Adresse:</strong> {{ membre.adresse or '—' }}</p>
-                            <p><strong>Sexe:</strong> {{ 'Masculin' if membre.sexe == 'M' else 'Féminin' }}</p>
-                            <p><strong>Groupe:</strong> {{ membre.groupe }}</p>
-                            <p><strong>Statut:</strong> {{ membre.statut }}</p>
-                          </div>
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-user me-2"></i>Détails de {{ membre.nom }}
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-4 text-center mb-4 mb-md-0">
+                                            {% if membre.photo %}
+                                            <img src="{{ url_for('static', filename='uploads/' + membre.photo) }}" 
+                                                 class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
+                                            {% else %}
+                                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mb-3" 
+                                                 style="width: 150px; height: 150px; margin: 0 auto;">
+                                                <i class="fas fa-user fa-4x"></i>
+                                            </div>
+                                            {% endif %}
+                                            <h4>{{ membre.nom }}</h4>
+                                            <span class="badge {% if membre.statut == 'actif' %}bg-success{% else %}bg-danger{% endif %}">
+                                                {{ membre.statut|capitalize }}
+                                            </span>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="mb-4">
+                                                <h5 class="border-bottom pb-2">Informations personnelles</h5>
+                                                <div class="d-flex flex-wrap">
+                                                    <span class="detail-badge bg-light text-dark">
+                                                        <i class="fas fa-id-card me-1"></i> {{ membre.code_membre }}
+                                                    </span>
+                                                    <span class="detail-badge bg-light text-dark">
+                                                        <i class="fas fa-phone-alt me-1"></i> {{ membre.telephone }}
+                                                    </span>
+                                                    <span class="detail-badge bg-light text-dark">
+                                                        <i class="fas fa-{{ 'mars' if membre.sexe == 'M' else 'venus' }} me-1"></i> 
+                                                        {{ 'Masculin' if membre.sexe == 'M' else 'Féminin' }}
+                                                    </span>
+                                                    {% if membre.date_naissance %}
+                                                    <span class="detail-badge bg-light text-dark">
+                                                        <i class="fas fa-birthday-cake me-1"></i> 
+                                                        {{ membre.date_naissance.strftime('%d/%m/%Y') }}
+                                                    </span>
+                                                    {% endif %}
+                                                    {% if membre.groupe %}
+                                                    <span class="detail-badge bg-info text-dark">
+                                                        <i class="fas fa-users me-1"></i> {{ membre.groupe }}
+                                                    </span>
+                                                    {% endif %}
+                                                </div>
+                                                {% if membre.adresse %}
+                                                <div class="mt-2">
+                                                    <p class="mb-1"><strong><i class="fas fa-map-marker-alt me-2"></i>Adresse:</strong></p>
+                                                    <p>{{ membre.adresse }}</p>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <h5 class="border-bottom pb-2">Configuration WhatsApp</h5>
+                                                <p class="mb-1"><strong>API Key:</strong></p>
+                                                <code class="api-key d-block p-2 mb-2">{{ membre.apikey_callmebot or 'Non configuré' }}</code>
+                                                <small class="text-muted">Utilisé pour les notifications WhatsApp</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                    <a href="{{ url_for('detail_membre', id=membre.id) }}" class="btn btn-primary">
+                                        <i class="fas fa-external-link-alt me-1"></i> Profil complet
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                      </div>
                     </div>
+                    
                     <!-- Modal Modification -->
                     <div class="modal fade" id="modalEdit{{ membre.id }}" tabindex="-1" aria-hidden="true">
-                      <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                          <form method="POST" action="{{ url_for('modifier_membre', id=membre.id) }}" enctype="multipart/form-data">
-                            <div class="modal-header bg-secondary text-white">
-                              <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Modifier {{ membre.nom }}</h5>
-                              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <form method="POST" action="{{ url_for('modifier_membre', id=membre.id) }}" enctype="multipart/form-data">
+                                    <div class="modal-header bg-secondary text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-edit me-2"></i>Modifier {{ membre.nom }}
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Nom complet <span class="text-danger">*</span></label>
+                                                <input type="text" name="nom" class="form-control" value="{{ membre.nom }}" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Téléphone <span class="text-danger">*</span></label>
+                                                <input type="text" name="telephone" class="form-control" value="{{ membre.telephone }}" required>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Date de naissance</label>
+                                                <input type="date" name="date_naissance" class="form-control" 
+                                                       value="{{ membre.date_naissance.strftime('%Y-%m-%d') if membre.date_naissance }}">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Sexe <span class="text-danger">*</span></label>
+                                                <select name="sexe" class="form-select" required>
+                                                    <option value="M" {% if membre.sexe == 'M' %}selected{% endif %}>Masculin</option>
+                                                    <option value="F" {% if membre.sexe == 'F' %}selected{% endif %}>Féminin</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Groupe</label>
+                                                <select name="groupe" class="form-select">
+                                                    <option value="">-- Sélectionnez un groupe --</option>
+                                                    {% for g in ['Chorale', 'Jeunesse', 'Dames', 'Hommes', 'Enfants'] %}
+                                                        <option value="{{ g }}" {% if membre.groupe == g %}selected{% endif %}>{{ g }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Statut</label>
+                                                <select name="statut" class="form-select" required>
+                                                    <option value="actif" {% if membre.statut == 'actif' %}selected{% endif %}>Actif</option>
+                                                    <option value="inactif" {% if membre.statut == 'inactif' %}selected{% endif %}>Inactif</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Adresse</label>
+                                            <textarea name="adresse" class="form-control" rows="2">{{ membre.adresse }}</textarea>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Photo</label>
+                                                <input type="file" name="photo" class="form-control" accept="image/*">
+                                                {% if membre.photo %}
+                                                <small class="text-muted">Photo actuelle: {{ membre.photo }}</small>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">API Key CallMeBot</label>
+                                                <input type="text" name="api" class="form-control" value="{{ membre.apikey_callmebot }}" 
+                                                       placeholder="Clé pour notifications WhatsApp">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-save me-1"></i> Enregistrer
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
-                            <div class="modal-body">
-                              <div class="mb-3">
-                                <label>Nom</label>
-                                <input type="text" name="nom" class="form-control" value="{{ membre.nom }}" required>
-                              </div>
-                              <div class="mb-3">
-                                <label>Téléphone</label>
-                                <input type="text" name="telephone" class="form-control" value="{{ membre.telephone }}" required>
-                              </div>
-                              <div class="mb-3">
-                                <label>Adresse</label>
-                                <input type="text" name="adresse" class="form-control" value="{{ membre.adresse }}">
-                              </div>
-                              <div class="mb-3">
-                                <label>Date de naissance</label>
-                                <input type="date" name="date_naissance" class="form-control" value="{{ membre.date_naissance }}">
-                              </div>
-                              <div class="mb-3">
-                                <label>Sexe</label>
-                                <select name="sexe" class="form-select" required>
-                                  <option value="M" {% if membre.sexe == 'M' %}selected{% endif %}>Masculin</option>
-                                  <option value="F" {% if membre.sexe == 'F' %}selected{% endif %}>Féminin</option>
-                                </select>
-                              </div>
-                              <div class="mb-3">
-                                <label>Groupe</label>
-                                <select name="groupe" class="form-select">
-                                  {% for g in ['Chorale', 'Jeunesse', 'Dames', 'Hommes', 'Enfants'] %}
-                                    <option value="{{ g }}" {% if membre.groupe == g %}selected{% endif %}>{{ g }}</option>
-                                  {% endfor %}
-                                </select>
-                              </div>
-                              <div class="mb-3">
-                                <label>Photo</label>
-                                <input type="file" name="photo" class="form-control">
-                              </div>
-                              <div class="mb-3">
-                                <label>API Key CallMeBot</label>
-                                <input type="text" name="api" class="form-control" value="{{ membre.apikey_callmebot }}">
-                              </div>
-                            </div>
-                            <div class="modal-footer">
-                              <button type="submit" class="btn btn-success">Enregistrer</button>
-                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                            </div>
-                          </form>
                         </div>
-                      </div>
                     </div>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+        <nav aria-label="Pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">Précédent</a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="#">Suivant</a>
+                </li>
+            </ul>
+        </nav>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle me-2"></i>
+            Aucun membre enregistré pour le moment.
+        </div>
+        {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fonction de recherche
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('membersTable');
+    
+    if (searchInput && table) {
+        searchInput.addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const rows = table.getElementsByTagName('tr');
+            
+            for (let i = 1; i < rows.length; i++) { // Skip header row
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                let found = false;
+                
+                for (let j = 0; j < cells.length; j++) {
+                    const cell = cells[j];
+                    if (cell) {
+                        if (cell.textContent.toLowerCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (found) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    }
+    
+    // Animation des cartes
+    const memberCards = document.querySelectorAll('.member-card');
+    memberCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transitionDelay = `${index * 0.05}s`;
+        
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100);
+    });
+});
+</script>
 {% endblock %}

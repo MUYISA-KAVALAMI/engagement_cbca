@@ -248,15 +248,59 @@ def modifier_membre(id):
         flash(f"Erreur lors de la modification : {str(e)}", "danger")
 
     return redirect(url_for('liste_membres'))
+@app.template_filter('format_currency')
+def format_currency(value):
+    return f"{value:.2f} $" if value is not None else "—"
 
+@app.template_filter('age')
+def age(birthdate):
+    if not birthdate:
+        return "—"
+    today = date.today()
+    return today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
+
+
+def calculer_age(date_naissance):
+    today = date.today()
+    return today.year - date_naissance.year - (
+        (today.month, today.day) < (date_naissance.month, date_naissance.day)
+    )
 
 @app.route('/membres/<int:id>')
 @login_required
 def detail_membre(id):
+    # 🔍 Récupération du membre
     membre = Membre.query.get_or_404(id)
-    engagements = Engagement.query.filter_by(membre_id=id).order_by(Engagement.date_limite).all()
-    paiements = Paiement.query.filter_by(membre_id=id).order_by(Paiement.date_paiement.desc()).limit(10).all()
-    return render_template('membres/detail.html', membre=membre, engagements=engagements, paiements=paiements)
+
+    # 📆 Engagements triés par échéance
+    engagements = Engagement.query.filter_by(membre_id=id)\
+                   .order_by(Engagement.date_limite.asc()).all()
+
+    # 💳 Paiements liés au membre via les engagements
+    paiements = Paiement.query.join(Engagement)\
+                .filter(Engagement.membre_id == id)\
+                .order_by(Paiement.date_paiement.desc()).all()
+
+    # 📊 Statistiques
+    total_paiements = sum(p.montant for p in paiements)
+    engagements_actifs = sum(1 for e in engagements if e.statut == 'actif')
+    engagements_termines = sum(1 for e in engagements if e.statut == 'payé')
+
+    # 🧠 Calcul de l’âge
+    age = calculer_age(membre.date_naissance)
+
+    return render_template(
+        'membres/detail.html',
+        membre=membre,
+        engagements=engagements,
+        paiements=paiements,
+        total_paiements=total_paiements,
+        engagements_actifs=engagements_actifs,
+        engagements_termines=engagements_termines,
+        age=age,
+        date=date.today()
+    )
+
 
 # Initialisation de la base de données
 def init_db():
@@ -273,11 +317,39 @@ def init_db():
             db.session.add(admin)
             db.session.commit()
         
-@app.route('/engagements')
+from datetime import datetime
+from collections import defaultdict
 @login_required
+@app.route('/engagements')
 def liste_engagements():
-    engagements = Engagement.query.order_by(Engagement.date_limite).all()
-    return render_template('engagements/liste.html', engagements=engagements)
+    engagements = Engagement.query.all()
+    
+    # Calcul des statistiques
+    stats = defaultdict(int)
+    total = len(engagements)
+    
+    for engagement in engagements:
+        if engagement.statut == 'payé':
+            stats['paid'] += 1
+        elif engagement.statut == 'échu':
+            stats['overdue'] += 1
+        else:
+            stats['in_progress'] += 1
+    
+    # Calcul des pourcentages
+    if total > 0:
+        stats['paid_percent'] = (stats['paid'] / total) * 100
+        stats['overdue_percent'] = (stats['overdue'] / total) * 100
+        stats['in_progress_percent'] = (stats['in_progress'] / total) * 100
+    else:
+        stats['paid_percent'] = 0
+        stats['overdue_percent'] = 0
+        stats['in_progress_percent'] = 0
+    
+    return render_template('engagements/liste.html', 
+                         engagements=engagements,
+                          now=date.today(),
+                         stats=stats)
 
 @app.route('/engagements/ajouter', methods=['GET', 'POST'])
 @login_required
@@ -336,7 +408,7 @@ def ajouter_engagement():
             flash(f"Erreur: {str(e)}", 'danger')
 
     membres = Membre.query.order_by(Membre.nom).all()
-    return render_template('engagements/ajouter.html', membres=membres)
+    return render_template('engagements/ajouter.html', membres=membres,datetime=datetime)
 
 @app.route('/engagements/<int:id>/modifier', methods=['POST'])
 @login_required
@@ -386,7 +458,7 @@ def modifier_engagement(id):
 @login_required
 def liste_paiements():
     paiements = Paiement.query.order_by(Paiement.date_paiement.desc()).all()
-    return render_template('paiements/liste.html', paiements=paiements)
+    return render_template('paiements/liste.html', paiements=paiements,date=date)
 @app.route('/paiements/<int:id>/modifier', methods=['POST'])
 @login_required
 @admin_required
@@ -416,6 +488,19 @@ def modifier_paiement(id):
 
     return redirect(url_for('liste_paiements'))
 
+@app.route('/paiements/<int:id>/supprimer', methods=['POST'])
+@login_required
+@admin_required
+def supprimer_paiement(id):
+    paiement = Paiement.query.get_or_404(id)
+    try:
+        db.session.delete(paiement)
+        db.session.commit()
+        flash("Paiement supprimé avec succès", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erreur lors de la suppression : {str(e)}", "danger")
+    return redirect(url_for('liste_paiements'))
 
 @app.route('/paiements/ajouter', methods=['GET', 'POST'])
 @login_required

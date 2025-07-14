@@ -12,6 +12,7 @@
             --cbcawhite: #ffffff;  /* Blanc */
             --cbcadark: #1a1a1a;   /* Noir */
             --cbcagray: #f5f5f5;   /* Gris clair */
+            --cbcablue: #003366;   /* Bleu foncé */
         }
         
         body {
@@ -39,6 +40,16 @@
             color: white;
         }
         
+        .btn-cbca-outline {
+            border-color: var(--cbcared);
+            color: var(--cbcared);
+        }
+        
+        .btn-cbca-outline:hover {
+            background-color: var(--cbcared);
+            color: white;
+        }
+        
         .card-cbca {
             border-top: 4px solid var(--cbcared);
             transition: transform 0.3s;
@@ -49,9 +60,37 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         
+        .sidebar {
+            background-color: var(--cbcablue);
+            color: white;
+            min-height: calc(100vh - 56px);
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
         footer {
             background-color: var(--cbcadark);
             margin-top: auto;
+        }
+        
+        /* Style pour les tableaux */
+        .table-cbca thead {
+            background-color: var(--cbcared);
+            color: white;
+        }
+        
+        /* Badges */
+        .badge-cbca {
+            background-color: var(--cbcared);
         }
     </style>
     
@@ -61,6 +100,9 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    
     <!-- CSS personnalisé -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     
@@ -69,10 +111,10 @@
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark navbar-cbca shadow">
-        <div class="container">
+        <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('accueil') }}">
-                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo CBCA" height="40" class="me-2">
-                <span class="d-none d-md-inline">CBCA VULUMBI</span>
+                <img src="{{ url_for('static', filename='img/logo-cbca.jpg') }}" alt="Logo CBCA" height="40" class="me-2">
+                <span class="d-none d-md-inline">CBCA VULUMBI - Gestion des Engagements</span>
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
@@ -83,9 +125,10 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if request.endpoint == 'accueil' }}" href="{{ url_for('accueil') }}">
-                            <i class="fas fa-home me-1"></i> Accueil
+                            <i class="fas fa-home me-1"></i> Tableau de bord
                         </a>
                     </li>
+                    {% if current_user.is_authenticated and current_user.role == 'admin' %}
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if request.endpoint == 'liste_membres' }}" href="{{ url_for('liste_membres') }}">
                             <i class="fas fa-users me-1"></i> Membres
@@ -96,6 +139,12 @@
                             <i class="fas fa-handshake me-1"></i> Engagements
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'liste_paiements' }}" href="{{ url_for('liste_paiements') }}">
+                            <i class="fas fa-money-bill-wave me-1"></i> Paiements
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
                 
                 <ul class="navbar-nav">
@@ -103,9 +152,10 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user-circle me-1"></i> {{ current_user.username }}
+                            {% if current_user.role == 'admin' %}<span class="badge bg-warning ms-1">Admin</span>{% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i> Profil</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i> Paramètres</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i> Déconnexion</a></li>
                         </ul>
@@ -123,51 +173,107 @@
     </nav>
 
     <!-- Contenu principal -->
-    <main class="container my-4 flex-grow-1">
-        <!-- Messages flash -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar optionnel (peut être activé si besoin) -->
+            <!-- <div class="col-md-2 d-none d-md-block sidebar p-0">
+                <div class="p-3">
+                    <h5 class="text-center mb-4">Menu</h5>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'accueil' }}" href="{{ url_for('accueil') }}">
+                                <i class="fas fa-tachometer-alt me-2"></i> Tableau de bord
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'liste_membres' }}" href="{{ url_for('liste_membres') }}">
+                                <i class="fas fa-users me-2"></i> Membres
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'liste_engagements' }}" href="{{ url_for('liste_engagements') }}">
+                                <i class="fas fa-handshake me-2"></i> Engagements
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'liste_paiements' }}" href="{{ url_for('liste_paiements') }}">
+                                <i class="fas fa-money-bill-wave me-2"></i> Paiements
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'rapports' }}" href="#">
+                                <i class="fas fa-chart-bar me-2"></i> Rapports
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div> -->
+            
+            <main class="col-md-12 ms-sm-auto px-md-4 py-4">
+                <!-- Messages flash -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show">
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <strong>
+                                    {% if category == 'success' %}
+                                        <i class="fas fa-check-circle me-2"></i>
+                                    {% elif category == 'danger' %}
+                                        <i class="fas fa-exclamation-circle me-2"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                    {% endif %}
+                                </strong>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- Titre de page -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">{% block page_title %}{% endblock %}</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        {% block page_actions %}{% endblock %}
                     </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        <!-- Bloc de contenu -->
-        {% block content %}{% endblock %}
-    </main>
+                </div>
+                
+                <!-- Bloc de contenu -->
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
 
     <!-- Pied de page -->
     <footer class="py-4 text-white">
         <div class="container">
             <div class="row">
                 <div class="col-md-4 mb-3">
-                    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo CBCA" height="50">
-                    <p class="mt-2 mb-0">Communauté Baptiste au Centre de l'Afrique<br>Paroisse de Vulumbi</p>
+                    <img src="{{ url_for('static', filename='img/logo-cbca.jpg') }}" alt="Logo CBCA" height="50">
+                    <p class="mt-2 mb-0">Communauté Baptiste au Centre de l'Afrique<br>Paroisse de Vulumbi<br>Gestion des Engagements</p>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <h5>Liens utiles</h5>
+                    <h5>Navigation</h5>
                     <ul class="list-unstyled">
-                        <li><a href="#" class="text-white text-decoration-none"><i class="fas fa-chevron-right me-1"></i> Site national CBCA</a></li>
-                        <li><a href="#" class="text-white text-decoration-none"><i class="fas fa-chevron-right me-1"></i> Évènements</a></li>
+                        <li><a href="{{ url_for('accueil') }}" class="text-white text-decoration-none"><i class="fas fa-chevron-right me-1"></i> Accueil</a></li>
+                        <li><a href="{{ url_for('liste_membres') }}" class="text-white text-decoration-none"><i class="fas fa-chevron-right me-1"></i> Membres</a></li>
+                        <li><a href="{{ url_for('liste_engagements') }}" class="text-white text-decoration-none"><i class="fas fa-chevron-right me-1"></i> Engagements</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <h5>Contact</h5>
+                    <h5>Support</h5>
                     <address>
-                        <i class="fas fa-map-marker-alt me-2"></i> Av. de la Mission, Vulumbi<br>
+                        <i class="fas fa-user-tie me-2"></i> Responsable: Pasteur Vulumbi<br>
                         <i class="fas fa-phone me-2"></i> +243 81 234 5678<br>
-                        <i class="fas fa-envelope me-2"></i> contact@cbcavulumbi.org
+                        <i class="fas fa-envelope me-2"></i> engagements@cbcavulumbi.org
                     </address>
                 </div>
             </div>
             <hr class="my-2 bg-light">
             <div class="text-center pt-2">
                 <small>
-                    &copy; 2025 CBCA Vulumbi - Tous droits réservés | 
+                    &copy; 2025 CBCA Vulumbi - Système de Gestion des Engagements | 
                     <a href="#" class="text-white text-decoration-none">Mentions légales</a>
                 </small>
             </div>
@@ -175,7 +281,32 @@
     </footer>
 
     <!-- JavaScript -->
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    
+    <!-- Scripts de base -->
+    <script>
+        // Activer les tooltips
+        $(function () {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+        
+        // Initialiser DataTables sur les tables avec la classe 'datatable'
+        $(document).ready(function() {
+            $('.datatable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/fr-FR.json'
+                },
+                responsive: true
+            });
+        });
+    </script>
+    
     {% block js %}{% endblock %}
 </body>
 </html>

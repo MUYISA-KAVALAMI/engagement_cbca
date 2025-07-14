@@ -2,94 +2,226 @@
 {% block title %}Liste des Paiements - CBCA Vulumbi{% endblock %}
 
 {% block content %}
-<div class="card shadow-sm border-0 mt-3">
-  <div class="card-header bg-cbca text-white">
-    <div class="d-flex justify-content-between align-items-center">
-      <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Historique des Paiements</h5>
-      <a href="{{ url_for('ajouter_paiement') }}" class="btn btn-light btn-sm">
-        <i class="fas fa-plus me-1"></i>Ajouter</a>
-    </div>
-  </div>
-
-  <div class="card-body">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Membre</th>
-            <th>Engagement</th>
-            <th>Montant payé</th>
-            <th>Montant engagement</th>
-            <th>Restant au moment</th>
-            <th>Progression</th>
-            <th>Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for paiement in paiements %}
-          {% set restant = paiement.engagement.montant_restant_au(paiement.date_paiement) %}
-
-          {% set total = paiement.engagement.montant_total %}
-          {% set payé = total - restant %}
-          <tr class="{% if restant <= 0 %}table-success{% endif %}">
-            <td>{{ paiement.engagement.membre.nom }}</td>
-            <td>{{ paiement.engagement.description or '—' }}</td>
-            <td>{{ "%.2f"|format(paiement.montant) }} $</td>
-            <td>{{ "%.2f"|format(total) }} $</td>
-            <td>
-              {% if restant <= 0 %}
-                <span class="badge bg-success">Soldé</span>
-              {% else %}
-                <span class="badge bg-warning text-dark">{{ "%.2f"|format(restant) }} $</span>
-              {% endif %}
-            </td>
-            <td style="min-width: 150px;">
-              <small class="text-muted">{{ "%.2f"|format(payé) }} $ / {{ "%.2f"|format(total) }} $</small>
-              <div class="progress" style="height: 6px;">
-                <div class="progress-bar bg-cbca" role="progressbar"
-                     style="width: {{ (payé * 100 / total)|round(2) }}%;"></div>
-              </div>
-            </td>
-            <td>{{ paiement.date_paiement.strftime('%d/%m/%Y') }}</td>
-            <td>
-              <a href="#" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalEdit{{ paiement.id }}">
-                <i class="fas fa-edit"></i>
-              </a>
-            </td>
-          </tr>
-
-          <!-- Modal Modification -->
-          <div class="modal fade" id="modalEdit{{ paiement.id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <form method="POST" action="{{ url_for('modifier_paiement', id=paiement.id) }}">
-                  <div class="modal-header bg-secondary text-white">
-                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Modifier Paiement</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                  </div>
-                  <div class="modal-body">
-                    <div class="mb-3">
-                      <label class="form-label">Montant</label>
-                      <input type="number" name="montant" class="form-control" step="0.01" min="0" value="{{ paiement.montant }}" required>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Date du paiement</label>
-                      <input type="date" name="date_paiement" class="form-control" value="{{ paiement.date_paiement.strftime('%Y-%m-%d') }}" required>
-                    </div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Enregistrer</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                  </div>
-                </form>
-              </div>
+<div class="container-fluid py-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-cbca text-dark">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-credit-card me-2"></i>Historique des Paiements
+                    <span class="badge bg-light text-primary ms-2">{{ paiements|length }}</span>
+                </h5>
+                <div>
+                    <a href="{{ url_for('ajouter_paiement') }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus me-1"></i>Ajouter
+                    </a>
+                    <button class="btn btn-light btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#filterModal">
+                        <i class="fas fa-filter me-1"></i>Filtrer
+                    </button>
+                </div>
             </div>
-          </div>
-          {% endfor %}
-        </tbody>
-      </table>
+        </div>
+
+        <div class="card-body">
+            {% if paiements %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Membre</th>
+                            <th>Engagement</th>
+                            <th>Montant payé</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for paiement in paiements %}
+                        {% set engagement = paiement.engagement %}
+                        {% set restant = engagement.montant_restant_au(paiement.date_paiement) %}
+                        {% set total = engagement.montant_total %}
+                        {% set payé = total - restant %}
+                        
+                        <tr class="{% if restant <= 0 %}table-success{% elif engagement.date_limite < date.today() %}table-danger{% endif %}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if engagement.membre.photo %}
+                                    <img src="{{ url_for('static', filename='uploads/' + engagement.membre.photo) }}" 
+                                         class="rounded-circle me-2" width="30" height="30" alt="{{ engagement.membre.nom }}">
+                                    {% else %}
+                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 30px; height: 30px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div>{{ engagement.membre.nom }}</div>
+                                        <small class="text-muted">{{ engagement.membre.code_membre }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>{{ engagement.description or '' }}</div>
+                                <small class="text-muted">Échéance: {{ engagement.date_limite.strftime('%d/%m/%Y') }}</small>
+                            </td>
+                            <td class="fw-bold">{{ "%.2f"|format(paiement.montant) }} $</td>
+                            <td>{{ paiement.date_paiement.strftime('%d/%m/%Y') }}</td>
+                            
+                            <td>
+                                {% if restant <= 0 %}
+                                <span class="badge bg-success">Soldé</span>
+                                {% elif engagement.date_limite < date.today() %}
+                                <span class="badge bg-danger">En retard</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">En cours</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex">
+                                    <button class="btn btn-sm btn-outline-secondary me-2" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#modalEdit{{ paiement.id }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                   
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Modal Modification -->
+                        <div class="modal fade" id="modalEdit{{ paiement.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form method="POST" action="{{ url_for('modifier_paiement', id=paiement.id) }}">
+                                        <div class="modal-header bg-secondary text-white">
+                                            <h5 class="modal-title">
+                                                <i class="fas fa-edit me-2"></i>Modifier Paiement
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">Membre</label>
+                                                <input type="text" class="form-control" 
+                                                       value="{{ engagement.membre.nom }}" readonly>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Engagement</label>
+                                                <input type="text" class="form-control" 
+                                                       value="{{ engagement.description or '—' }}" readonly>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Montant</label>
+                                                <div class="input-group">
+                                                    <input type="number" name="montant" class="form-control" 
+                                                           step="0.01" min="0.01" value="{{ paiement.montant }}" required>
+                                                    <span class="input-group-text">$</span>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Date du paiement</label>
+                                                <input type="date" name="date_paiement" class="form-control" 
+                                                       value="{{ paiement.date_paiement.strftime('%Y-%m-%d') }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Mode de paiement</label>
+                                                <select name="mode_paiement" class="form-select">
+                                                    <option value="espèces" {% if paiement.mode_paiement == 'espèces' %}selected{% endif %}>Espèces</option>
+                                                    <option value="mobile_money" {% if paiement.mode_paiement == 'mobile_money' %}selected{% endif %}>Mobile Money</option>
+                                                    <option value="virement" {% if paiement.mode_paiement == 'virement' %}selected{% endif %}>Virement bancaire</option>
+                                                    <option value="cheque" {% if paiement.mode_paiement == 'cheque' %}selected{% endif %}>Chèque</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-save me-1"></i> Enregistrer
+                                            </button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                Annuler
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <nav aria-label="Pagination">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Précédent</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Suivant</a>
+                    </li>
+                </ul>
+            </nav>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle me-2"></i>
+                Aucun paiement enregistré pour le moment.
+            </div>
+            {% endif %}
+        </div>
     </div>
-  </div>
+</div>
+
+<!-- Modal Filtres -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="GET" action="{{ url_for('liste_paiements') }}">
+                <div class="modal-header bg-secondary text-white">
+                    <h5 class="modal-title"><i class="fas fa-filter me-2"></i>Filtrer les paiements</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Membre</label>
+                        <select name="membre_id" class="form-select">
+                            <option value="">Tous les membres</option>
+                            {% for membre in membres %}
+                            <option value="{{ membre.id }}">{{ membre.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date de début</label>
+                            <input type="date" name="date_debut" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date de fin</label>
+                            <input type="date" name="date_fin" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Statut</label>
+                        <select name="statut" class="form-select">
+                            <option value="">Tous</option>
+                            <option value="soldé">Soldés</option>
+                            <option value="en_cours">En cours</option>
+                            <option value="en_retard">En retard</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-1"></i> Appliquer
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Annuler
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
