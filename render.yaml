@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: cbca-engagement
+    env: python
+    buildCommand: ""
+    startCommand: gunicorn "app:create_app()"
