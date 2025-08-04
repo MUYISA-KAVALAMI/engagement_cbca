@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Gestion des membres{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Gestion des membres</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            {{ form.telephone.label(class="form-label") }}
+            {{ form.telephone(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.cle_callmebot.label(class="form-label") }}
+            {{ form.cle_callmebot(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.idcarte.label(class="form-label") }}
+            {{ form.idcarte(class="form-select") }}
+        </div>
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+    <hr>
+    <h4>Liste des membres</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Code membre</th>
+                <th>Téléphone</th>
+                <th>Numéro carte</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Chapelle</th>
+                <th>Sexe</th>
+                <th>Date naissance</th>
+                <th>Lieu naissance</th>
+                <th>Adresse</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for membre in membres %}
+            <tr>
+                <td>{{ membre.code_chretien }}</td>
+                <td>{{ membre.telephone }}</td>
+                <td>{{ membre.carte_bapteme.numerocarte }}</td>
+                <td>{{ membre.carte_bapteme.nom }}</td>
+                <td>{{ membre.carte_bapteme.prenom }}</td>
+                <td>{{ membre.carte_bapteme.chapelle }}</td>
+                <td>{{ membre.carte_bapteme.sexe }}</td>
+                <td>{{ membre.carte_bapteme.datenaissance }}</td>
+                <td>{{ membre.carte_bapteme.lieunaissance }}</td>
+                <td>{{ membre.carte_bapteme.adresse }}</td>
+                <td>
+                    <!-- Bouton Modifier -->
+                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal{{ membre.idchretien }}">Modifier</button>
+                </td>
+            </tr>
+
+            <!-- Modal Modification -->
+            <div class="modal fade" id="editModal{{ membre.idchretien }}" tabindex="-1" aria-labelledby="editModalLabel{{ membre.idchretien }}" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="POST" action="{{ url_for('main.modifier_membre', id=membre.idchretien) }}">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="editModalLabel{{ membre.idchretien }}">Modifier le membre</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label class="form-label">Téléphone</label>
+                        <input type="text" class="form-control" name="edit_telephone" value="{{ membre.telephone }}" required>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Clé CallMeBot</label>
+                        <input type="text" class="form-control" name="edit_cle_callmebot" value="{{ membre.cle_callmebot }}" required>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Carte de baptême</label>
+                        <select class="form-select" name="edit_idcarte" required>
+                          {% for carte in cartes %}
+                            <option value="{{ carte.idcarte }}" {% if membre.idcarte == carte.idcarte %}selected{% endif %}>
+                              {{ carte.numerocarte }} - {{ carte.nom }} {{ carte.prenom }}
+                            </option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                      <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

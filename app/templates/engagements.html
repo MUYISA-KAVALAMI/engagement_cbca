@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Gestion des engagements{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Gestion des engagements</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.montant_total.label(class="form-label") }}
+                {{ form.montant_total(class="form-control") }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.date_limite.label(class="form-label") }}
+                {{ form.date_limite(class="form-control") }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.idchretien.label(class="form-label") }}
+                {{ form.idchretien(class="form-select") }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.idbudget.label(class="form-label") }}
+                {{ form.idbudget(class="form-select") }}
+            </div>
+        </div>
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+    <hr>
+    <h4>Liste des engagements</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Code membre</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Montant total</th>
+                <th>Date engagement</th>
+                <th>Date limite</th>
+                <th>Statut</th>
+                <th>Budget</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for engagement in engagements %}
+            <tr>
+                <td>{{ engagement.chretien.code_chretien }}</td>
+                <td>{{ engagement.chretien.carte_bapteme.nom }}</td>
+                <td>{{ engagement.chretien.carte_bapteme.prenom }}</td>
+                <td>{{ engagement.montant_total }}</td>
+                <td>{{ engagement.date_engagement.strftime('%d/%m/%Y') }}</td>
+                <td>{{ engagement.date_limite.strftime('%d/%m/%Y') }}</td>
+                <td>
+                    <span class="badge bg-{% if engagement.statutengagement == 'payé' %}success{% else %}warning{% endif %}">
+                        {{ engagement.statutengagement }}
+                    </span>
+                </td>
+                <td>{{ engagement.budget.exercice }}</td>
+                <td>
+                    <!-- Bouton Modifier -->
+                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal{{ engagement.idengagement }}">Modifier</button>
+                    <!-- Bouton Paiements -->
+                    <a href="{{ url_for('main.voir_paiements', id=engagement.idengagement) }}" class="btn btn-sm btn-info">Paiements</a>
+                </td>
+            </tr>
+
+            <!-- Modal Modification -->
+            <div class="modal fade" id="editModal{{ engagement.idengagement }}" tabindex="-1" aria-labelledby="editModalLabel{{ engagement.idengagement }}" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="POST" action="{{ url_for('main.modifier_engagement', id=engagement.idengagement) }}">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="editModalLabel{{ engagement.idengagement }}">Modifier l'engagement</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label class="form-label">Montant total</label>
+                        <input type="number" step="0.01" class="form-control" name="edit_montant_total" value="{{ engagement.montant_total }}" required>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Date limite</label>
+                        <input type="date" class="form-control" name="edit_date_limite" value="{{ engagement.date_limite.strftime('%Y-%m-%d') }}" required>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Statut</label>
+                        <select class="form-select" name="edit_statutengagement" required>
+                          <option value="en cours" {% if engagement.statutengagement == 'en cours' %}selected{% endif %}>En cours</option>
+                          <option value="payé" {% if engagement.statutengagement == 'payé' %}selected{% endif %}>Payé</option>
+                          <option value="annulé" {% if engagement.statutengagement == 'annulé' %}selected{% endif %}>Annulé</option>
+                        </select>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Chrétien</label>
+                        <select class="form-select" name="edit_idchretien" required>
+                          {% for chretien in chretiens %}
+                            <option value="{{ chretien.idchretien }}" {% if engagement.idchretien == chretien.idchretien %}selected{% endif %}>
+                              {{ chretien.code_chretien }} - {{ chretien.carte_bapteme.nom }} {{ chretien.carte_bapteme.prenom }}
+                            </option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Budget</label>
+                        <select class="form-select" name="edit_idbudget" required>
+                          {% for budget in budgets %}
+                            <option value="{{ budget.idbudget }}" {% if engagement.idbudget == budget.idbudget %}selected{% endif %}>
+                              {{ budget.exercice }} ({{ budget.montanttotal }})
+                            </option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                      <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

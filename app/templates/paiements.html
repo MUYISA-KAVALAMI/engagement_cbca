@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Paiements - Engagement #{{ engagement.idengagement }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Paiements pour l'engagement ENG-{{ engagement.idengagement }}</h2>
+    
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Détails</h5>
+                    <p>Membre: {{ engagement.chretien.code_chretien }} - {{ engagement.chretien.carte_bapteme.nom }}</p>
+                    <p>Montant total: {{ engagement.montant_total }} USD</p>
+                    <p>Date limite: {{ engagement.date_limite.strftime('%d/%m/%Y') }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Paiements</h5>
+                    <p>Total payé: {{ total_paye }} USD</p>
+                    <p>Reste à payer: {{ reste_a_payer }} USD</p>
+                    <p>Statut: <span class="badge bg-{% if engagement.statutengagement == 'payé' %}success{% else %}warning{% endif %}">
+                        {{ engagement.statutengagement }}
+                    </span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h4>Nouveau paiement</h4>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                {{ form.montant.label(class="form-label") }}
+                {{ form.montant(class="form-control", id="montant") }}
+            </div>
+            <div class="col-md-4 mb-3">
+                {{ form.date_paiement.label(class="form-label") }}
+                {{ form.date_paiement(class="form-control") }}
+            </div>
+            <div class="col-md-4 mb-3 d-flex align-items-end">
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </div>
+        <div class="alert alert-info">
+            Solde maximum autorisé: <strong>{{ "%.2f"|format(solde_max) }} USD</strong>
+        </div>
+    </form>
+
+    <hr>
+    <h4>Historique des paiements</h4>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Montant</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for paiement in paiements %}
+            <tr>
+                <td>{{ paiement.date_paiement.strftime('%d/%m/%Y') }}</td>
+                <td>{{ paiement.montant }} USD</td>
+                <td>
+                    <!-- Bouton modal -->
+                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalModifierPaiement{{ paiement.idpaiement }}">Modifier</button>
+                    <a href="{{ url_for('main.supprimer_paiement', id=paiement.idpaiement) }}" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce paiement?')">Supprimer</a>
+                </td>
+            </tr>
+
+            <!-- Modal modification paiement -->
+            <div class="modal fade" id="modalModifierPaiement{{ paiement.idpaiement }}" tabindex="-1" aria-labelledby="modalLabel{{ paiement.idpaiement }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form method="POST" action="{{ url_for('main.modifier_paiement', id=paiement.idpaiement) }}">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalLabel{{ paiement.idpaiement }}">Modifier Paiement</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                            </div>
+                            <div class="modal-body">
+                                {{ form.csrf_token }}
+                                <div class="mb-3">
+                                    <label class="form-label">Montant</label>
+                                    <input type="number" step="0.01" name="montant" value="{{ paiement.montant }}" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Date de paiement</label>
+                                    <input type="date" name="date_paiement" value="{{ paiement.date_paiement.strftime('%Y-%m-%d') }}" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ url_for('main.engagements') }}" class="btn btn-secondary">Retour aux engagements</a>
+</div>
+
+<!-- Validation JS -->
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    const max = parseFloat("{{ solde_max }}");
+    const montantField = document.getElementById('montant');
+    if (montantField) {
+        const montant = parseFloat(montantField.value);
+        if (montant > max) {
+            e.preventDefault();
+            alert(`Le montant ne peut pas dépasser ${max.toFixed(2)} USD`);
+        }
+    }
+});
+</script>
+{% endblock %}

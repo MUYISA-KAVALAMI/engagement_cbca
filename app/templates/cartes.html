@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Gestion des cartes de baptême{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Gestion des cartes de baptême</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="row">
+            <div class="col-md-6 mb-3">{{ form.numerocarte.label }}{{ form.numerocarte(class="form-control") }}</div>
+            <div class="col-md-6 mb-3">{{ form.chapelle.label }}{{ form.chapelle(class="form-select") }}</div>
+            <div class="col-md-6 mb-3">{{ form.nom.label }}{{ form.nom(class="form-control") }}</div>
+            <div class="col-md-6 mb-3">{{ form.prenom.label }}{{ form.prenom(class="form-control") }}</div>
+            <div class="col-md-6 mb-3">{{ form.sexe.label }}{{ form.sexe(class="form-select") }}</div>
+            <div class="col-md-6 mb-3">{{ form.datenaissance.label }}{{ form.datenaissance(class="form-control") }}</div>
+            <div class="col-md-6 mb-3">{{ form.lieunaissance.label }}{{ form.lieunaissance(class="form-control") }}</div>
+            <div class="col-md-6 mb-3">{{ form.adresse.label }}{{ form.adresse(class="form-control") }}</div>
+        </div>
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+    <hr>
+    <h4>Liste des cartes</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Numéro</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Chapelle</th>
+                <th>Sexe</th>
+                <th>Date naissance</th>
+                <th>Lieu naissance</th>
+                <th>Adresse</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for carte in cartes %}
+            <tr>
+                <td>{{ carte.numerocarte }}</td>
+                <td>{{ carte.nom }}</td>
+                <td>{{ carte.prenom }}</td>
+                <td>{{ carte.chapelle }}</td>
+                <td>{{ carte.sexe }}</td>
+                <td>{{ carte.datenaissance }}</td>
+                <td>{{ carte.lieunaissance }}</td>
+                <td>{{ carte.adresse }}</td>
+                <td>
+                    <!-- Bouton Modifier -->
+                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal{{ carte.idcarte }}">Modifier</button>
+                    <!-- Bouton Supprimer -->
+                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ carte.idcarte }}">Supprimer</button>
+                </td>
+            </tr>
+
+            <!-- Modal Modification -->
+            <div class="modal fade" id="editModal{{ carte.idcarte }}" tabindex="-1" aria-labelledby="editModalLabel{{ carte.idcarte }}" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="POST" action="{{ url_for('main.modifier_carte', id=carte.idcarte) }}">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="editModalLabel{{ carte.idcarte }}">Modifier la carte</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label class="form-label">Numéro de carte</label>
+                        <input type="text" class="form-control" name="edit_numerocarte" value="{{ carte.numerocarte }}" required>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Chapelle</label>
+                        <select class="form-select" name="edit_chapelle" required>
+                          <option value="Vulumbe" {% if carte.chapelle == 'Vulumbe' %}selected{% endif %}>Vulumbe</option>
+                          <option value="Kisima" {% if carte.chapelle == 'Kisima' %}selected{% endif %}>Kisima</option>
+                          <option value="Autre" {% if carte.chapelle == 'Autre' %}selected{% endif %}>Autre</option>
+                        </select>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Nom</label>
+                        <input type="text" class="form-control" name="edit_nom" value="{{ carte.nom }}" required>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Prénom</label>
+                        <input type="text" class="form-control" name="edit_prenom" value="{{ carte.prenom }}" required>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Sexe</label>
+                        <select class="form-select" name="edit_sexe" required>
+                          <option value="M" {% if carte.sexe == 'M' %}selected{% endif %}>Masculin</option>
+                          <option value="F" {% if carte.sexe == 'F' %}selected{% endif %}>Féminin</option>
+                        </select>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Date de naissance</label>
+                        <input type="date" class="form-control" name="edit_datenaissance" value="{{ carte.datenaissance }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Lieu de naissance</label>
+                        <input type="text" class="form-control" name="edit_lieunaissance" value="{{ carte.lieunaissance }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Adresse</label>
+                        <input type="text" class="form-control" name="edit_adresse" value="{{ carte.adresse }}">
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                      <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modal Suppression -->
+            <div class="modal fade" id="deleteModal{{ carte.idcarte }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ carte.idcarte }}" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="POST" action="{{ url_for('main.supprimer_carte', id=carte.idcarte) }}">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="deleteModalLabel{{ carte.idcarte }}">Supprimer la carte</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <p>Voulez-vous vraiment supprimer la carte de <strong>{{ carte.nom }} {{ carte.prenom }}</strong> ?</p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                      <button type="submit" class="btn btn-danger">Supprimer</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

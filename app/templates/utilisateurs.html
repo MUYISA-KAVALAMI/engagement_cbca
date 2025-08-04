@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des utilisateurs{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Gestion des utilisateurs</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <h4>Ajouter un utilisateur</h4>
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    {{ form.username.label(class="form-label") }}
+                    {{ form.username(class="form-control") }}
+                    {% for error in form.username.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="mb-3">
+                    {{ form.email.label(class="form-label") }}
+                    {{ form.email(class="form-control") }}
+                    {% for error in form.email.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="mb-3">
+                    {{ form.role.label(class="form-label") }}
+                    {{ form.role(class="form-select") }}
+                    {% for error in form.role.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="mb-3">
+                    {{ form.password.label(class="form-label") }}
+                    {{ form.password(class="form-control") }}
+                    {% for error in form.password.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="mb-3">
+                    {{ form.confirm_password.label(class="form-label") }}
+                    {{ form.confirm_password(class="form-control") }}
+                    {% for error in form.confirm_password.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {{ form.submit(class="btn btn-primary") }}
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h4>Liste des utilisateurs</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom d'utilisateur</th>
+                        <th>Email</th>
+                        <th>Rôle</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for utilisateur in utilisateurs %}
+                    <tr>
+                        <td>{{ utilisateur.idutilisateur }}</td>
+                        <td>{{ utilisateur.username }}</td>
+                        <td>{{ utilisateur.email }}</td>
+                        <td>{{ utilisateur.role }}</td>
+                        <td>
+                            <!-- Bouton Modifier (ouvre le modal) -->
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal{{ utilisateur.idutilisateur }}">Modifier</button>
+                            <!-- Bouton Supprimer (ouvre le modal) -->
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ utilisateur.idutilisateur }}">Supprimer</button>
+                        </td>
+                    </tr>
+
+                    <!-- Modal Modification -->
+                    <div class="modal fade" id="editModal{{ utilisateur.idutilisateur }}" tabindex="-1" aria-labelledby="editModalLabel{{ utilisateur.idutilisateur }}" aria-hidden="true">
+                      <div class="modal-dialog">
+                        <div class="modal-content">
+                          <form method="POST" action="{{ url_for('main.utilisateurs') }}">
+                            {{ form.hidden_tag() }}
+                            <div class="modal-header">
+                              <h5 class="modal-title" id="editModalLabel{{ utilisateur.idutilisateur }}">Modifier l'utilisateur</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                              <input type="hidden" name="edit_id" value="{{ utilisateur.idutilisateur }}">
+                              <div class="mb-3">
+                                <label class="form-label">Nom d'utilisateur</label>
+                                <input type="text" class="form-control" name="edit_username" value="{{ utilisateur.username }}" required>
+                              </div>
+                              <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="text" class="form-control" name="edit_email" value="{{ utilisateur.email }}">
+                              </div>
+                              <div class="mb-3">
+                                <label class="form-label">Rôle</label>
+                                <select class="form-select" name="edit_role" required>
+                                  <option value="admin" {% if utilisateur.role == 'admin' %}selected{% endif %}>Admin</option>
+                                  <option value="utilisateur" {% if utilisateur.role == 'utilisateur' %}selected{% endif %}>Utilisateur</option>
+                                </select>
+                              </div>
+                              <div class="mb-3">
+                                <label class="form-label">Nouveau mot de passe (laisser vide pour ne pas changer)</label>
+                                <input type="password" class="form-control" name="edit_password">
+                              </div>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                              <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Modal Suppression -->
+                    <div class="modal fade" id="deleteModal{{ utilisateur.idutilisateur }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ utilisateur.idutilisateur }}" aria-hidden="true">
+                      <div class="modal-dialog">
+                        <div class="modal-content">
+                          <form method="POST" action="{{ url_for('main.supprimer_utilisateur', id=utilisateur.idutilisateur) }}">
+                            <div class="modal-header">
+                              <h5 class="modal-title" id="deleteModalLabel{{ utilisateur.idutilisateur }}">Supprimer l'utilisateur</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                              <p>Voulez-vous vraiment supprimer <strong>{{ utilisateur.username }}</strong> ?</p>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                              <button type="submit" class="btn btn-danger">Supprimer</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">Aucun utilisateur trouvé.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
