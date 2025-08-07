@@ -1,19 +1,125 @@
 {% extends "base.html" %}
-{% block title %}Connexion{% endblock %}
+
+{% block title %}Connexion - CBCA VULUMBI{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <h2>Connexion</h2>
-    <form method="POST">
-        {{ form.hidden_tag() }}
-        <div class="mb-3">
-            {{ form.username.label(class="form-label") }}
-            {{ form.username(class="form-control") }}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 mt-5">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h2 class="mb-0 fw-bold">
+                        <i class="bi bi-door-open me-2"></i>
+                        Bienvenue sur le système CBCA VULUMBI
+                    </h2>
+                </div>
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <img src="{{ url_for('static', filename='images/cbca_logo.png') }}" 
+                             alt="Logo CBCA VULUMBI" 
+                             class="mb-3" 
+                             style="height: 80px;">
+                        <p class="text-muted fs-6">Veuillez vous connecter avec vos identifiants pour accéder aux fonctionnalités du système.</p>
+                    </div>
+
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <!-- Champ Nom d'utilisateur -->
+                        <div class="mb-4">
+                            <div class="form-floating">
+                                {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), 
+                                    id="username", 
+                                    placeholder="Nom d'utilisateur", 
+                                    aria_label="Nom d'utilisateur") }}
+                                {{ form.username.label(for="username") }}
+                            </div>
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.username.errors %}
+                                        <i class="bi bi-exclamation-circle-fill"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Champ Mot de passe -->
+                        <div class="mb-4">
+                            <div class="form-floating">
+                                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), 
+                                    id="password", 
+                                    placeholder="Mot de passe", 
+                                    aria_label="Mot de passe") }}
+                                {{ form.password.label(for="password") }}
+                            </div>
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.password.errors %}
+                                        <i class="bi bi-exclamation-circle-fill"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Options supplémentaires -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remember">
+                                <label class="form-check-label" for="remember">
+                                    Se souvenir de moi
+                                </label>
+                            </div>
+                            <a href="#" class="text-decoration-none">Mot de passe oublié ?</a>
+                        </div>
+
+                        <!-- Bouton de connexion -->
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <!-- Message de contact -->
+                    <div class="text-center">
+                        <p class="mb-0">Première connexion ou besoin d’aide ? 
+                            <a href="#" class="text-decoration-none fw-bold">Contactez l’administrateur</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="mb-3">
-            {{ form.password.label(class="form-label") }}
-            {{ form.password(class="form-control") }}
-        </div>
-        {{ form.submit(class="btn btn-primary") }}
-    </form>
+    </div>
 </div>
+
+<!-- 🎨 Style personnalisé -->
+<style>
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .form-floating > label {
+        color: #6c757d;
+    }
+
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    .btn-primary {
+        padding: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    a {
+        color: #0d6efd;
+    }
+
+    a:hover {
+        color: #084298;
+    }
+</style>
 {% endblock %}

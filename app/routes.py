@@ -23,14 +23,14 @@ def envoyer_whatsapp(numero, cle, message):
 
 @main.route('/')
 def index():
-    if not current_user.is_authenticated:
-        return redirect(url_for('main.login'))
     return redirect(url_for('main.home'))
 
 @main.route('/home')
-@login_required
 def home():
     return render_template('home.html')
+@main.route('/contact')
+def contact():
+    return render_template('contact.html')
 
 @main.route('/utilisateurs', methods=['GET', 'POST'])
 @login_required

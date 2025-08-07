@@ -3,21 +3,287 @@
 {% block title %}Accueil - CBCA VULUMBI{% endblock %}
 
 {% block content %}
-<div class="text-center mt-5">
-    <h1 class="fw-bold" style="color: #b30000;">Bienvenue à la CBCA VULUMBI</h1>
-    <p class="lead">Système de Gestion des Engagements</p>
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <p class="mb-4">
-                Cet outil numérique facilite la gestion transparente et efficace des engagements au sein de notre communauté.
-                Simple, sécurisé et fidèle à nos valeurs.
-            </p>
-            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-                <a href="#" class="btn btn-danger btn-lg px-4 gap-3">Accéder au système</a>
-                <a href="#" class="btn btn-outline-secondary btn-lg px-4">En savoir plus</a>
+<!-- Hero Section with improved styling -->
+<section class="hero-section position-relative overflow-hidden">
+    <div class="container position-relative py-5 my-lg-5">
+        <div class="row justify-content-center text-center text-white py-5">
+            <div class="col-lg-8 py-5">
+                <h1 class="display-3 fw-bold mb-4 animate__animated animate__fadeInDown">Bienvenue à la CBCA VULUMBI</h1>
+                <p class="lead fs-4 mb-5 animate__animated animate__fadeIn animate__delay-1s">Système de Gestion des Engagements et Contributions</p>
+                <div class="d-grid gap-3 d-sm-flex justify-content-sm-center animate__animated animate__fadeInUp animate__delay-1s">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('main.engagements') }}" class="btn btn-light btn-lg px-4 gap-3 rounded-pill shadow-sm">
+                            <i class="bi bi-journal-check me-2"></i> Voir les engagements
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('main.login') }}" class="btn btn-light btn-lg px-4 gap-3 rounded-pill shadow-sm">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Se connecter
+                        </a>
+                    {% endif %}
+                    <a href="#features" class="btn btn-outline-light btn-lg px-4 rounded-pill">
+                        <i class="bi bi-info-circle me-2"></i> En savoir plus
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+    <div class="hero-wave">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25" class="shape-fill"></path>
+            <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5" class="shape-fill"></path>
+            <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" class="shape-fill"></path>
+        </svg>
+    </div>
+</section>
 
+<!-- Features Section -->
+<section id="features" class="py-5 bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-8 text-center">
+                <h2 class="display-5 fw-bold mb-3">Fonctionnalités Principales</h2>
+                <p class="lead text-muted">Découvrez comment notre système peut simplifier la gestion de votre communauté</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm-hover transition-all">
+                    <div class="card-body text-center p-4 p-lg-5">
+                        <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 mx-auto mb-4" style="width: 80px; height: 80px; line-height: 80px;">
+                            <i class="bi bi-journal-check fs-3"></i>
+                        </div>
+                        <h3 class="h4 mb-3">Gestion des Engagements</h3>
+                        <p class="text-muted mb-0">Suivi transparent des engagements financiers des membres avec notifications automatiques par WhatsApp pour un meilleur suivi.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm-hover transition-all">
+                    <div class="card-body text-center p-4 p-lg-5">
+                        <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 mx-auto mb-4" style="width: 80px; height: 80px; line-height: 80px;">
+                            <i class="bi bi-people-fill fs-3"></i>
+                        </div>
+                        <h3 class="h4 mb-3">Base des Membres</h3>
+                        <p class="text-muted mb-0">Gestion centralisée des membres avec leurs informations personnelles, spirituelles et coordonnées de contact.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm-hover transition-all">
+                    <div class="card-body text-center p-4 p-lg-5">
+                        <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 mx-auto mb-4" style="width: 80px; height: 80px; line-height: 80px;">
+                            <i class="bi bi-bar-chart-line fs-3"></i>
+                        </div>
+                        <h3 class="h4 mb-3">Rapports & Statistiques</h3>
+                        <p class="text-muted mb-0">Tableaux de bord complets avec visualisations graphiques pour le suivi des contributions et la prise de décision éclairée.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="py-5">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 pe-lg-5 mb-5 mb-lg-0">
+                <h2 class="display-5 fw-bold mb-4">À propos du système</h2>
+                <p class="lead text-muted">Cet outil numérique a été conçu pour faciliter la gestion transparente et efficace des engagements au sein de notre communauté chrétienne.</p>
+                <p class="mb-4">Fidèle à nos valeurs chrétiennes, le système permet :</p>
+                <ul class="list-unstyled mb-4">
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="bi bi-check-circle-fill text-primary me-3 mt-1"></i>
+                        <span>Suivi en temps réel des contributions avec historique complet</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="bi bi-check-circle-fill text-primary me-3 mt-1"></i>
+                        <span>Notifications automatiques par WhatsApp pour les engagements et paiements</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="bi bi-check-circle-fill text-primary me-3 mt-1"></i>
+                        <span>Rapports détaillés et exportables pour les responsables</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="bi bi-check-circle-fill text-primary me-3 mt-1"></i>
+                        <span>Sécurité et confidentialité des données des membres</span>
+                    </li>
+                </ul>
+                <a href="#" class="btn btn-primary px-4 py-2 rounded-pill shadow-sm">
+                    <i class="bi bi-box-arrow-up-right me-2"></i> Découvrir plus de fonctionnalités
+                </a>
+            </div>
+            <div class="col-lg-6">
+                <div class="position-relative rounded-4 overflow-hidden shadow-lg">
+                    <img src="{{ url_for('static', filename='images/dashboard-preview.png') }}" alt="Aperçu du système" class="img-fluid">
+                    <div class="position-absolute top-0 start-0 w-100 h-100 bg-primary bg-opacity-10"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section (optional) -->
+<section class="py-5 bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-8 text-center">
+                <h2 class="display-5 fw-bold mb-3">Témoignages</h2>
+                <p class="lead text-muted">Ce que nos utilisateurs disent du système</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <i class="bi bi-quote fs-1 text-primary opacity-25 me-3"></i>
+                            <div>
+                                <p class="mb-0 fst-italic">"Le système a révolutionné notre gestion des engagements. Tout est maintenant transparent et accessible."</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <img src="{{ url_for('static', filename='images/user1.jpg') }}" class="rounded-circle" width="50" height="50" alt="Pasteur">
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-0">Pasteur M. Kabasele</h6>
+                                <small class="text-muted">Responsable CBCA</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <i class="bi bi-quote fs-1 text-primary opacity-25 me-3"></i>
+                            <div>
+                                <p class="mb-0 fst-italic">"Les notifications WhatsApp m'aident à ne pas oublier mes engagements. Très pratique et professionnel."</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <img src="{{ url_for('static', filename='images/user2.jpg') }}" class="rounded-circle" width="50" height="50" alt="Membre">
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-0">Sœur A. Mulumba</h6>
+                                <small class="text-muted">Membre active</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <i class="bi bi-quote fs-1 text-primary opacity-25 me-3"></i>
+                            <div>
+                                <p class="mb-0 fst-italic">"En tant que trésorier, les rapports automatisés me font gagner un temps précieux chaque mois."</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <img src="{{ url_for('static', filename='images/user3.jpg') }}" class="rounded-circle" width="50" height="50" alt="Trésorier">
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-0">Frère J. Kalombo</h6>
+                                <small class="text-muted">Trésorier</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5 bg-primary text-white">
+    <div class="container py-4">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <h2 class="display-5 fw-bold mb-4">Prêt à simplifier votre gestion des engagements ?</h2>
+                <p class="lead mb-5">Rejoignez les nombreuses communautés qui utilisent déjà notre système pour une gestion transparente et efficace.</p>
+                <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('main.engagements') }}" class="btn btn-light btn-lg px-4 rounded-pill shadow-sm">
+                            <i class="bi bi-journal-check me-2"></i> Accéder au tableau de bord
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('main.login') }}" class="btn btn-light btn-lg px-4 rounded-pill shadow-sm">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Se connecter
+                        </a>
+                    {% endif %}
+                    <a href="#" class="btn btn-outline-light btn-lg px-4 rounded-pill">
+                        <i class="bi bi-question-circle me-2"></i> Demander une démo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .hero-section {
+        background: linear-gradient(rgba(179, 0, 0, 0.85), rgba(139, 0, 0, 0.95)), url('{{ url_for('static', filename='images/church-bg.jpg') }}');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        padding-top: 6rem;
+        padding-bottom: 8rem;
+        position: relative;
+    }
+    
+    .hero-wave {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        overflow: hidden;
+        line-height: 0;
+    }
+    
+    .hero-wave svg {
+        position: relative;
+        display: block;
+        width: calc(100% + 1.3px);
+        height: 100px;
+    }
+    
+    .hero-wave .shape-fill {
+        fill: #f8f9fa;
+    }
+    
+    .shadow-sm-hover {
+        transition: all 0.3s ease;
+    }
+    
+    .shadow-sm-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+    
+    .icon-box {
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover .icon-box {
+        transform: scale(1.1);
+        background: rgba(179, 0, 0, 0.1) !important;
+        color: #b30000 !important;
+    }
+</style>
+{% endblock %}

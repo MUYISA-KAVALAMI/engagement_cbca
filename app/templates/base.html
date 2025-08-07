@@ -9,50 +9,139 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --primary-color: #b30000;
+            --primary-dark: #8a0000;
+            --secondary-color: #f8f9fa;
+            --text-color: #333;
+            --light-gray: #f5f5f5;
+        }
+        
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f8f9fa;
-            padding-bottom: 60px;
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
+        
         .navbar {
-            background-color: #b30000;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background-color: var(--primary-color);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            padding: 0.5rem 0;
         }
+        
         .navbar-brand img {
             height: 50px;
+            transition: transform 0.3s;
         }
+        
+        .navbar-brand:hover img {
+            transform: scale(1.05);
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            margin: 0 0.2rem;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: #ffffff !important;
+            background-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .nav-item i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 2rem 0 4rem;
+        }
+        
         .footer {
-            background-color: #b30000;
+            background-color: var(--primary-dark);
             color: white;
             text-align: center;
-            padding: 10px 0;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
+            padding: 1rem 0;
+            margin-top: auto;
         }
-        .content {
-            margin-top: 20px;
-            padding-bottom: 20px;
+        
+        .footer p {
+            margin-bottom: 0;
+            font-size: 0.9rem;
         }
-        .nav-link {
-            color: rgba(255,255,255,0.85) !important;
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 1.5rem;
         }
-        .nav-link:hover {
-            color: #ffffff !important;
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
-        .nav-item i {
-            margin-right: 6px;
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 600;
+        }
+        
+        h1, h2, h3, h4, h5 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary-dark);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        
+        .alert {
+            border-radius: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-brand img {
+                height: 40px;
+            }
+            
+            .content {
+                padding: 1rem 0 3rem;
+            }
         }
     </style>
+    
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container">
         <a class="navbar-brand" href="{{ url_for('main.home') }}">
             <img src="{{ url_for('static', filename='images/cbca_logo.png') }}" alt="CBCA Logo">
+            <span class="d-none d-md-inline ms-2" style="font-family: 'Playfair Display', serif;">CBCA VULUMBI</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
@@ -60,44 +149,39 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('main.home') }}">
+                    <a class="nav-link {{ 'active' if request.path == url_for('main.home') }}" href="{{ url_for('main.home') }}">
                         <i class="bi bi-house-door-fill"></i> Accueil
                     </a>
                 </li>
                 {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.engagements') }}">
+                        <a class="nav-link {{ 'active' if request.path == url_for('main.engagements') }}" href="{{ url_for('main.engagements') }}">
                             <i class="bi bi-journal-check"></i> Engagements
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.membres') }}">
+                        <a class="nav-link {{ 'active' if request.path == url_for('main.membres') }}" href="{{ url_for('main.membres') }}">
                             <i class="bi bi-people-fill"></i> Membres
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.cartes') }}">
-                            <i class="bi bi-card-heading"></i> Cartes de baptême
+                        <a class="nav-link {{ 'active' if request.path == url_for('main.cartes') }}" href="{{ url_for('main.cartes') }}">
+                            <i class="bi bi-card-heading"></i> Cartes
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#paiements">
+                        <a class="nav-link {{ 'active' if request.path.startswith('/engagements/') and '/paiements' in request.path }}" href="#paiements">
                             <i class="bi bi-cash-coin"></i> Paiements
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#rapports">
-                            <i class="bi bi-bar-chart-line-fill"></i> Rapports
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.budgets') }}">
+                        <a class="nav-link {{ 'active' if request.path == url_for('main.budgets') }}" href="{{ url_for('main.budgets') }}">
                             <i class="bi bi-wallet-fill"></i> Budgets
                         </a>
                     </li>
                     {% if current_user.role == 'admin' %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.utilisateurs') }}">
+                        <a class="nav-link {{ 'active' if request.path == url_for('main.utilisateurs') }}" href="{{ url_for('main.utilisateurs') }}">
                             <i class="bi bi-person-gear"></i> Utilisateurs
                         </a>
                     </li>
@@ -106,10 +190,15 @@
             </ul>
             <ul class="navbar-nav">
                 {% if current_user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('main.logout') }}">
-                        <i class="bi bi-box-arrow-right"></i> Déconnexion
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i> {{ current_user.username }}
                     </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-person-fill"></i> Profil</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('main.logout') }}"><i class="bi bi-box-arrow-right"></i> Déconnexion</a></li>
+                    </ul>
                 </li>
                 {% else %}
                 <li class="nav-item">
@@ -123,26 +212,35 @@
     </div>
 </nav>
 
-<div class="container content">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    
-    {% block content %}{% endblock %}
-</div>
+<main class="content">
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show mt-3" role="alert">
+                        <i class="bi bi-{{ 'check-circle-fill' if category == 'success' else 'exclamation-triangle-fill' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+</main>
 
-<div class="footer">
-    &copy; {{ now.year }} CBCA VULUMBI. Tous droits réservés.
-</div>
+<footer class="footer">
+    <div class="container">
+        <p class="mb-0">
+            &copy; {{ now.year }} Communauté Baptiste du Centre en Afrique - VULUMBI. Tous droits réservés.
+        </p>
+    </div>
+</footer>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+{% block extra_js %}{% endblock %}
 </body>
 </html>
